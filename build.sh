@@ -62,6 +62,9 @@ FAN_HELPER_ID="$APP_BUNDLE_ID.fan-control"
 # Sources/NowPlayingAdapter. Staged under Contents/Frameworks, signed on its own.
 NOW_PLAYING_ADAPTER_ID="$APP_BUNDLE_ID.now-playing"
 NOW_PLAYING_ADAPTER="libVorssaintNowPlaying.dylib"
+FINDER_MENU_EXTENSION="VorssaintFinderMenu"
+FINDER_MENU_EXTENSION_ID="$APP_BUNDLE_ID.finder-menu"
+FINDER_MENU_ENTITLEMENTS="Resources/FinderMenu/VorssaintFinderMenu.entitlements"
 TARGET="arm64-apple-macosx14.0"
 ENTITLEMENTS="Resources/Vorssaint.entitlements"
 LEGACY_IDENTITY="Vorssaint Utils Signing"
@@ -153,6 +156,7 @@ finalize_installed_bundle_after_child() {
     local bundle="$1"
     local helper="$bundle/Contents/Library/LaunchServices/$FAN_HELPER_ID"
     local adapter="$bundle/Contents/Frameworks/$NOW_PLAYING_ADAPTER"
+    local finder_extension="$bundle/Contents/PlugIns/$FINDER_MENU_EXTENSION.appex"
     local devid
     devid="$(developer_id_identity)"
 
@@ -163,6 +167,9 @@ finalize_installed_bundle_after_child() {
             --options runtime --timestamp --identifier "$FAN_HELPER_ID" --sign "$devid" "$helper"
         [[ -f "$adapter" ]] && codesign_with_timestamp_retry --force --strip-disallowed-xattrs \
             --options runtime --timestamp --identifier "$NOW_PLAYING_ADAPTER_ID" --sign "$devid" "$adapter"
+        [[ -d "$finder_extension" ]] && codesign_with_timestamp_retry --force --strip-disallowed-xattrs \
+            --options runtime --timestamp --entitlements "$FINDER_MENU_ENTITLEMENTS" \
+            --identifier "$FINDER_MENU_EXTENSION_ID" --sign "$devid" "$finder_extension"
         codesign_with_timestamp_retry --force --strip-disallowed-xattrs --options runtime --timestamp \
             --entitlements "$ENTITLEMENTS" --sign "$devid" "$bundle"
     elif legacy_identity_installed; then
@@ -170,16 +177,23 @@ finalize_installed_bundle_after_child() {
             --identifier "$FAN_HELPER_ID" --sign "$LEGACY_IDENTITY" "$helper"
         [[ -f "$adapter" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
             --identifier "$NOW_PLAYING_ADAPTER_ID" --sign "$LEGACY_IDENTITY" "$adapter"
+        [[ -d "$finder_extension" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
+            --entitlements "$FINDER_MENU_ENTITLEMENTS" --identifier "$FINDER_MENU_EXTENSION_ID" \
+            --sign "$LEGACY_IDENTITY" "$finder_extension"
         /usr/bin/codesign --force --strip-disallowed-xattrs --sign "$LEGACY_IDENTITY" "$bundle"
     else
         [[ -f "$helper" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
             --identifier "$FAN_HELPER_ID" --sign - "$helper"
         [[ -f "$adapter" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
             --identifier "$NOW_PLAYING_ADAPTER_ID" --sign - "$adapter"
+        [[ -d "$finder_extension" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
+            --entitlements "$FINDER_MENU_ENTITLEMENTS" --identifier "$FINDER_MENU_EXTENSION_ID" \
+            --sign - "$finder_extension"
         /usr/bin/codesign --force --strip-disallowed-xattrs --sign - "$bundle"
     fi
     [[ -f "$helper" ]] && /usr/bin/codesign --verify --strict "$helper"
     [[ -f "$adapter" ]] && /usr/bin/codesign --verify --strict "$adapter"
+    [[ -d "$finder_extension" ]] && /usr/bin/codesign --verify --strict "$finder_extension"
     /usr/bin/codesign --verify --deep --strict "$bundle"
     echo "✓ Signature ready: $bundle"
 }
@@ -330,6 +344,11 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Notch/NotchPlaybackCommand.swift
         Sources/Vorssaint/Services/Notch/NotchMusicCommandWriter.swift
         Sources/Vorssaint/Core/FeatureCatalog.swift
+        Sources/Vorssaint/Core/FinderMenu/FinderMenuAction.swift
+        Sources/Vorssaint/Core/FinderMenu/FinderMenuConfiguration.swift
+        Sources/Vorssaint/Core/FinderMenu/FinderMenuSnapshot.swift
+        Sources/Vorssaint/Core/FinderMenu/FinderMenuRequest.swift
+        Sources/Vorssaint/Core/FinderMenu/FinderMenuIPCContract.swift
         Sources/Vorssaint/Core/FeaturePresets.swift
         Sources/Vorssaint/Core/FeatureHubStrings.swift
         Sources/Vorssaint/Core/MixerScreenSharingStrings.swift
@@ -349,6 +368,7 @@ if (( TEST )); then
         Sources/Vorssaint/Core/WallpaperStrings.swift
         Sources/Vorssaint/Services/Wallpaper/WallpaperSupport.swift
         Sources/Vorssaint/Core/ScratchpadStrings.swift
+        Sources/Vorssaint/Core/FinderMenuStrings.swift
         Sources/Vorssaint/Core/FinderRenameStrings.swift
         Sources/Vorssaint/Core/CommandBarStrings.swift
         Sources/Vorssaint/Core/FeedbackStrings.swift
@@ -447,6 +467,7 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Shelf/ShelfFilePromiseTransfer.swift
         Sources/Vorssaint/Core/ShelfPromiseDeliveryStrings.swift
         Sources/Vorssaint/Services/Finder/FinderRenameSupport.swift
+        Sources/Vorssaint/Services/FinderMenu/FinderMenuConfigurationStore.swift
         Sources/Vorssaint/Services/Update/UpdateInstallerSupport.swift
         Sources/Vorssaint/Services/Update/UpdateServiceSupport.swift
         Sources/Vorssaint/Services/InstalledApps.swift
@@ -549,6 +570,8 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Metrics/PeripheralBatterySampler.swift
         Sources/Vorssaint/Services/Metrics/PeripheralBatterySupport.swift
         Sources/Vorssaint/Services/Metrics/DiskSupport.swift
+        Sources/Vorssaint/UI/Monitor/UnifiedMonitor/UnifiedMonitorModel.swift
+        Sources/Vorssaint/UI/Monitor/UnifiedMonitor/UnifiedMonitorAdapter.swift
         Sources/Vorssaint/Services/Metrics/MonitorSamplingPolicy.swift
         Sources/Vorssaint/Services/Metrics/USBDeviceSampler.swift
         Sources/Vorssaint/Services/Metrics/CPUCoreSampler.swift
@@ -639,6 +662,25 @@ swiftc -O -target "$TARGET" -sdk "$SDK" "${SDK_COMPAT_FLAGS[@]}" -emit-library \
     Sources/Vorssaint/Services/Notch/NotchPlaybackCommand.swift \
     -o "build/$NOW_PLAYING_ADAPTER"
 
+echo "▸ Compiling Finder menu extension…"
+FINDER_MENU_SOURCES=(
+    Sources/VorssaintFinderMenu/*.swift
+    Sources/Vorssaint/Core/FinderMenu/*.swift
+)
+FINDER_MENU_OBJECT_DIR="build/objects/$FINDER_MENU_EXTENSION"
+mkdir -p "$FINDER_MENU_OBJECT_DIR"
+FINDER_MENU_OUTPUT_FILE_MAP="$FINDER_MENU_OBJECT_DIR/output-file-map.json"
+write_swift_output_file_map "$FINDER_MENU_OUTPUT_FILE_MAP" "$FINDER_MENU_OBJECT_DIR" \
+    "${FINDER_MENU_SOURCES[@]}"
+swiftc -O -parse-as-library -incremental -enable-batch-mode \
+    -j "$(sysctl -n hw.logicalcpu)" -output-file-map "$FINDER_MENU_OUTPUT_FILE_MAP" \
+    -target "$TARGET" -sdk "$SDK" "${SDK_COMPAT_FLAGS[@]}" \
+    "${BUILD_VARIANT_FLAGS[@]}" -application-extension \
+    -module-name "$FINDER_MENU_EXTENSION" \
+    -framework Cocoa -framework FinderSync \
+    -Xlinker -e -Xlinker _NSExtensionMain \
+    "${FINDER_MENU_SOURCES[@]}" -o "build/$FINDER_MENU_EXTENSION"
+
 echo "▸ Generating app icon…"
 swift Tools/MakeIcon.swift build/AppIcon.iconset
 xattr -c -r build/AppIcon.iconset build/AppIcon.icns build/MenuBarIcon.png build/MenuBarIcon@2x.png build/BrandMark.png 2>/dev/null || true
@@ -685,6 +727,18 @@ cp Resources/agent-prices.json "$STAGE/Contents/Resources/agent-prices.json"
 cp Resources/com.vorssaint.utils.fan-control.plist \
     "$STAGE/Contents/Library/LaunchDaemons/$FAN_HELPER_ID.plist"
 cp Resources/Info.plist "$STAGE/Contents/Info.plist"
+APP_SHORT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$STAGE/Contents/Info.plist")"
+APP_BUNDLE_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$STAGE/Contents/Info.plist")"
+FINDER_MENU_STAGE="$STAGE/Contents/PlugIns/$FINDER_MENU_EXTENSION.appex"
+mkdir -p "$FINDER_MENU_STAGE/Contents/MacOS"
+cp "build/$FINDER_MENU_EXTENSION" "$FINDER_MENU_STAGE/Contents/MacOS/$FINDER_MENU_EXTENSION"
+cp Resources/FinderMenu/Info.plist "$FINDER_MENU_STAGE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $FINDER_MENU_EXTENSION_ID" \
+    "$FINDER_MENU_STAGE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $APP_SHORT_VERSION" \
+    "$FINDER_MENU_STAGE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $APP_BUNDLE_VERSION" \
+    "$FINDER_MENU_STAGE/Contents/Info.plist"
 cp CHANGELOG.md "$STAGE/Contents/Resources/CHANGELOG.md"
 for lproj in Resources/*.lproj(N); do
     cp -R "$lproj" "$STAGE/Contents/Resources/"
@@ -788,11 +842,29 @@ codesign_now_playing_adapter() {
     fi
 }
 
+codesign_finder_menu_extension() {
+    local target="$1"
+    if [[ -n "$DEVID" ]]; then
+        codesign_with_timestamp_retry --force --strip-disallowed-xattrs --options runtime --timestamp \
+            --entitlements "$FINDER_MENU_ENTITLEMENTS" \
+            --identifier "$FINDER_MENU_EXTENSION_ID" --sign "$DEVID" "$target"
+    elif legacy_identity_installed; then
+        codesign --force --strip-disallowed-xattrs \
+            --entitlements "$FINDER_MENU_ENTITLEMENTS" \
+            --identifier "$FINDER_MENU_EXTENSION_ID" --sign "$LEGACY_IDENTITY" "$target"
+    else
+        codesign --force --strip-disallowed-xattrs \
+            --entitlements "$FINDER_MENU_ENTITLEMENTS" \
+            --identifier "$FINDER_MENU_EXTENSION_ID" --sign - "$target"
+    fi
+}
+
 sign_bundle() {
     local bundle="$1"
     local executable="$bundle/Contents/MacOS/$EXECUTABLE"
     local helper="$bundle/Contents/Library/LaunchServices/$FAN_HELPER_ID"
     local adapter="$bundle/Contents/Frameworks/$NOW_PLAYING_ADAPTER"
+    local finder_extension="$bundle/Contents/PlugIns/$FINDER_MENU_EXTENSION.appex"
 
     if [[ -n "$DEVID" ]]; then
         echo "  signing with Developer ID (hardened runtime): $DEVID"
@@ -803,6 +875,7 @@ sign_bundle() {
     fi
     [[ -f "$helper" ]] && codesign_fan_helper "$helper"
     [[ -f "$adapter" ]] && codesign_now_playing_adapter "$adapter"
+    [[ -d "$finder_extension" ]] && codesign_finder_menu_extension "$finder_extension"
     codesign_app "$bundle"
 
     # If local filesystem metadata invalidates the first signature, sign once
@@ -812,11 +885,13 @@ sign_bundle() {
         xattr -c -r "$bundle" 2>/dev/null || true
         [[ -f "$helper" ]] && codesign_fan_helper "$helper"
         [[ -f "$adapter" ]] && codesign_now_playing_adapter "$adapter"
+        [[ -d "$finder_extension" ]] && codesign_finder_menu_extension "$finder_extension"
         codesign_app "$bundle"
     fi
     [[ -f "$executable" ]] && codesign --verify --strict "$executable"
     [[ -f "$helper" ]] && codesign --verify --strict "$helper"
     [[ -f "$adapter" ]] && codesign --verify --strict "$adapter"
+    [[ -d "$finder_extension" ]] && codesign --verify --strict "$finder_extension"
     codesign --verify --deep --strict "$bundle"
 }
 
@@ -921,5 +996,10 @@ if (( INSTALL )); then
     rm -rf "$INSTALL_DEST"
     ditto --noextattr --noqtn "$STAGE" "$INSTALL_DEST"
     sign_installed_bundle "$INSTALL_DEST"
+    if [[ -d "$INSTALL_DEST/Contents/PlugIns/$FINDER_MENU_EXTENSION.appex" ]]; then
+        /usr/bin/pluginkit -a "$INSTALL_DEST/Contents/PlugIns/$FINDER_MENU_EXTENSION.appex" \
+            >/dev/null 2>&1 || true
+        echo "  Finder menu extension registered"
+    fi
     echo "✓ Installed: $INSTALL_DEST"
 fi

@@ -18,7 +18,7 @@ enum SystemMonitorPlanTests {
 
     /// The panel's own state for its shipped `monitorNeeds`; the Power card
     /// is what matters here, so the other sections stay out.
-    enum PanelSectionID { case keepAwake, system, network, disk, power }
+    enum PanelSectionID { case keepAwake, monitorDashboard, system, network, disk, power }
 
     class PanelFixture {
         var selectedMetric: MetricDetailKind?
@@ -130,5 +130,20 @@ enum SystemMonitorPlanTests {
         suite.expect(monitor.currentPlan(defaults: defaults).needPeripheralBattery,
                      "the island's Battery detail still lists peripherals with the Power row hidden")
         monitor.notchDetailNeeds = .none
+
+        for feature in [AppFeature.monitorCPU, .monitorGPU, .monitorMemory,
+                        .monitorNetwork, .monitorDisk, .monitorPower, .connectedDevices] {
+            defaults.set(true, forKey: feature.availabilityKey)
+        }
+        panel.selectedMetric = nil
+        panel.activeSection = .monitorDashboard
+        monitor.menuPanelNeeds = panel.monitorNeeds
+        let dashboard = monitor.currentPlan(defaults: defaults)
+        suite.expect(dashboard.needCPU && dashboard.needGPUUsage && dashboard.needMemory,
+                     "the unified dashboard reads CPU, GPU and memory")
+        suite.expect(dashboard.needNetwork && dashboard.needDisk && dashboard.needPower,
+                     "the unified dashboard reads network, disk and power")
+        suite.expect(dashboard.needTemperature && dashboard.needConnectedDevices,
+                     "the unified dashboard reads temperatures and connected devices")
     }
 }

@@ -19,7 +19,7 @@ enum AppFeature: String, CaseIterable {
     case scrollInverter, scrollHorizontal, focusFollowsMouse, smoothScroll, linearScroll, mouseAcceleration, mouseNavigation, mouseButtonShortcuts, middleClick,
          mouseClickDebounce, keyboardDebounce, textSnippets, superKey, quitWindowProtection
     // Clipboard and files
-    case clipboardHistory, pastePlain, finderCutPaste, finderRename, shelf, urlCleaner,
+    case clipboardHistory, pastePlain, finderCutPaste, finderContextMenu, finderRename, shelf, urlCleaner,
          diskImageInstaller
     // Sound
     case mixer, soundOutputSwitcher, audioPriority, micMute, musicBlock
@@ -106,8 +106,8 @@ extension AppFeature {
         case .scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts, .middleClick,
              .keyboardDebounce, .textSnippets, .superKey, .quitWindowProtection, .mouseClickDebounce:
             return .mouseKeyboard
-        case .clipboardHistory, .pastePlain, .finderCutPaste, .finderRename, .shelf, .urlCleaner,
-             .diskImageInstaller:
+        case .clipboardHistory, .pastePlain, .finderCutPaste, .finderContextMenu, .finderRename,
+             .shelf, .urlCleaner, .diskImageInstaller:
             return .clipboardFiles
         case .mixer, .soundOutputSwitcher, .audioPriority, .micMute, .musicBlock:
             return .sound
@@ -156,6 +156,7 @@ extension AppFeature {
         case .clipboardHistory: return "doc.on.clipboard"
         case .pastePlain: return "doc.plaintext"
         case .finderCutPaste: return "scissors"
+        case .finderContextMenu: return "filemenu.and.selection"
         case .finderRename: return "pencil"
         case .shelf: return "tray.full"
         case .urlCleaner: return "link"
@@ -275,6 +276,7 @@ extension AppFeature {
         case .pastePlain: return [DefaultsKey.pastePlainEnabled]
         case .finderCutPaste: return [DefaultsKey.finderCutPasteEnabled,
                                       DefaultsKey.finderPasteImageAsFile]
+        case .finderContextMenu: return []
         case .finderRename: return [DefaultsKey.finderRenameEnabled]
         case .shelf: return [DefaultsKey.shelfEnabled]
         case .urlCleaner: return [DefaultsKey.urlCleanerEnabled]
@@ -358,6 +360,7 @@ extension AppFeature {
              .commandBar:
             return [.accessibility]
         case .finderCutPaste: return [.accessibility, .automationFinder]
+        case .finderContextMenu: return [.automationFinder]
         case .finderRename: return [.accessibility]
         // Only emptying the Trash asks the Finder; every other quick toggle
         // (dark mode included) works without a permission.
@@ -484,7 +487,8 @@ extension AppFeature {
              .connectedDevices:
             return true
         case .focusFollowsMouse, .scrollHorizontal, .linearScroll, .diskImageInstaller, .audioPriority,
-             .wallpaper, .killProcess, .portManager, .fanControl, .notchMascot, .spacesOrder:
+             .wallpaper, .killProcess, .portManager, .fanControl, .notchMascot, .spacesOrder,
+             .finderContextMenu:
             return false
         }
     }

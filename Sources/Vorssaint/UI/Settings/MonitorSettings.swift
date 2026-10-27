@@ -24,6 +24,8 @@ struct MonitorSettings: View {
     @AppStorage(DefaultsKey.networkSpeedUnit) private var networkSpeedUnit = NetworkSpeedUnit.bytes
     @AppStorage(DefaultsKey.monitorMemoryMetric) private var memoryMetric = "used"
     @AppStorage(DefaultsKey.panelShowFanControl) private var showFanControl = true
+    @AppStorage(DefaultsKey.usesUnifiedDashboard) private var usesUnifiedDashboard = true
+    @AppStorage(DefaultsKey.unifiedMonitorHiddenCards) private var hiddenDashboardCardsRaw = ""
 
     var body: some View {
         // A plain stack, not a lazy one: a lazy stack estimates the rows it
@@ -235,13 +237,77 @@ struct MonitorSettings: View {
 
     private var panelCard: some View {
         SettingsCard {
-            MonitorPanelConfig(tiles: true)
-            Text(l10n.s.monitorPanelConfigHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            SettingsRow(symbol: "square.grid.2x2",
+                        title: "Unified dashboard",
+                        caption: "Show CPU, GPU, memory, disk, network, power and top processes in one overview.") {
+                Toggle("Unified dashboard", isOn: $usesUnifiedDashboard).labelsHidden()
+            }
+            if usesUnifiedDashboard {
+                Text("Cards in the overview")
+                    .font(.subheadline.weight(.medium))
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 165), spacing: 8)], spacing: 8) {
+                    ForEach(UnifiedMonitorCardID.allCases) { id in
+                        MonitorToken(symbol: id.defaultSymbolName,
+                                     title: dashboardCardTitle(id),
+                                     included: dashboardCardVisible(id),
+                                     available: dashboardCardAvailable(id),
+                                     large: true)
+                    }
+                }
+                .monitorTokenGroup()
+            } else {
+                MonitorPanelConfig(tiles: true)
+                Text(l10n.s.monitorPanelConfigHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             SettingsRow(symbol: "arrow.up.to.line", title: GraphScaleStrings.localized(l10n.language).title) {
                 Toggle(GraphScaleStrings.localized(l10n.language).title, isOn: $graphScale).labelsHidden()
             }
+        }
+    }
+
+    private var hiddenDashboardCards: Set<UnifiedMonitorCardID> {
+        Set(hiddenDashboardCardsRaw.split(separator: ",").compactMap {
+            UnifiedMonitorCardID(rawValue: String($0))
+        })
+    }
+
+    private func dashboardCardVisible(_ id: UnifiedMonitorCardID) -> Binding<Bool> {
+        Binding {
+            !hiddenDashboardCards.contains(id)
+        } set: { visible in
+            var hidden = hiddenDashboardCards
+            if visible { hidden.remove(id) } else { hidden.insert(id) }
+            hiddenDashboardCardsRaw = hidden.map(\.rawValue).sorted().joined(separator: ",")
+        }
+    }
+
+    private func dashboardCardAvailable(_ id: UnifiedMonitorCardID) -> Bool {
+        switch id {
+        case .cpu: return AppFeature.monitorCPU.isAvailable
+        case .gpu: return AppFeature.monitorGPU.isAvailable
+        case .memory: return AppFeature.monitorMemory.isAvailable
+        case .disk: return AppFeature.monitorDisk.isAvailable
+        case .network: return AppFeature.monitorNetwork.isAvailable
+        case .battery, .temperature:
+            return AppFeature.monitorPower.isAvailable
+                || AppFeature.monitorCPU.isAvailable
+                || AppFeature.monitorGPU.isAvailable
+        case .processes: return true
+        }
+    }
+
+    private func dashboardCardTitle(_ id: UnifiedMonitorCardID) -> String {
+        switch id {
+        case .cpu: return l10n.s.cpuLabel
+        case .gpu: return l10n.s.gpuLabel
+        case .memory: return l10n.s.memorySection
+        case .disk: return l10n.s.diskSection
+        case .network: return l10n.s.networkSection
+        case .temperature: return l10n.s.temperatures
+        case .battery: return l10n.s.batteryLabel
+        case .processes: return "Processes"
         }
     }
 

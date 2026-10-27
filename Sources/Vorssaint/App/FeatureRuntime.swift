@@ -283,6 +283,7 @@ final class FeatureRuntime: ObservableObject {
         },
         .pastePlain: { PastePlainService.shared.syncWithPreferences() },
         .finderCutPaste: { FinderCutPaste.shared.syncWithPreferences() },
+        .finderContextMenu: { FinderMenuService.shared.syncWithPreferences() },
         .finderRename: { FinderRenameService.shared.syncWithPreferences() },
         .shelf: {
             ShelfService.shared.syncWithPreferences()

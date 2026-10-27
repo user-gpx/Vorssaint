@@ -15,9 +15,15 @@ struct CutPasteSettings: View {
     @State private var renameError: String?
     @State private var recordingRename = false
     @State private var pendingRenameTakeOver: GlobalShortcut?
+    @State private var menuConfiguration = FinderMenuConfigurationStore.shared.load()
+    @State private var menuError: String?
 
     private var renameText: FinderRenameFeatureStrings {
         FeatureStrings.finderRename(l10n.language)
+    }
+
+    private var menuText: FinderMenuStrings {
+        FeatureStrings.finderMenu(l10n.language)
     }
 
     private var renameShortcut: GlobalShortcut {
@@ -63,6 +69,31 @@ struct CutPasteSettings: View {
                     Text(l10n.s.cutPasteTextNote)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                }
+            }
+
+            if AppFeature.finderContextMenu.isAvailable {
+                Section {
+                    Toggle(menuText.enableLabel, isOn: menuBinding(\.isEnabled))
+                    Toggle(menuText.showIconsLabel, isOn: menuBinding(\.showIcons))
+                    Text(menuText.extensionHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if let menuError {
+                        Text(menuError)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                } header: {
+                    Text(menuText.sectionTitle)
+                }
+                .settingsFormSectionAnchor(.finderContextMenu)
+
+                Section(menuText.itemsLabel) {
+                    ForEach(FinderMenuAction.defaultOrder, id: \.rawValue) { action in
+                        Toggle(menuText.title(for: action), isOn: menuItemBinding(action))
+                            .disabled(!menuConfiguration.isEnabled)
+                    }
                 }
             }
 
@@ -147,6 +178,42 @@ struct CutPasteSettings: View {
         }
         .formStyle(.grouped)
         .onChange(of: l10n.language) { _, _ in renameError = nil }
+    }
+
+    private func menuBinding(_ keyPath: WritableKeyPath<FinderMenuConfiguration, Bool>) -> Binding<Bool> {
+        Binding(
+            get: { menuConfiguration[keyPath: keyPath] },
+            set: { newValue in
+                menuConfiguration[keyPath: keyPath] = newValue
+                saveMenuConfiguration()
+            }
+        )
+    }
+
+    private func menuItemBinding(_ action: FinderMenuAction) -> Binding<Bool> {
+        Binding(
+            get: {
+                menuConfiguration.items.first { $0.action == action }?.isEnabled ?? false
+            },
+            set: { newValue in
+                if let index = menuConfiguration.items.firstIndex(where: { $0.action == action }) {
+                    menuConfiguration.items[index].isEnabled = newValue
+                } else {
+                    menuConfiguration.items.append(.action(action, isEnabled: newValue))
+                }
+                saveMenuConfiguration()
+            }
+        )
+    }
+
+    private func saveMenuConfiguration() {
+        do {
+            try FinderMenuConfigurationStore.shared.save(menuConfiguration)
+            menuError = nil
+            FinderMenuService.shared.syncWithPreferences()
+        } catch {
+            menuError = String(describing: error)
+        }
     }
 
     private func howRow(keys: [String], text: String) -> some View {

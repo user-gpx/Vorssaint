@@ -686,6 +686,32 @@ final class FinderCutPaste: ObservableObject {
 
     // MARK: - Marks / panel
 
+    var hasMarkedItems: Bool { !marked.isEmpty }
+
+    /// Marks files for a move from outside the event tap, used by the Finder
+    /// context menu. The pasteboard is written the same way ⌘X writes it, so a
+    /// normal ⌘V still works after the menu's Cut.
+    func markForMove(_ urls: [URL]) {
+        guard !urls.isEmpty else { clearMarks(); return }
+        applyCut(urls)
+    }
+
+    /// Moves the files marked by Cut into a specific directory instead of
+    /// Finder's insertion location. Used by the context menu's Paste.
+    func moveMarked(into dir: URL, completion: @escaping (Bool) -> Void) {
+        let urls = marked.map(\.url)
+        guard !urls.isEmpty else { completion(false); return }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let result = FinderBridge.move(urls, into: dir)
+            DispatchQueue.main.async {
+                if result.ok {
+                    self?.resetCutState(clearOwnedPasteboard: false)
+                }
+                completion(result.ok)
+            }
+        }
+    }
+
     func clearMarks() {
         guard !marked.isEmpty || lastResult != nil else { return }
         resetCutState(clearOwnedPasteboard: false)

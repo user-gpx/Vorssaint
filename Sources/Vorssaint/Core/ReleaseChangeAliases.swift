@@ -92,6 +92,7 @@ enum ReleaseChangeAliases {
             "clear unpinned", "clipboard previews", "clipboard items"]
         case .pastePlain: return ["paste as plain text", "paste plain text"]
         case .finderCutPaste: return ["cut & paste", "cut and paste", "cut files", "finder cut", "cut operations"]
+        case .finderContextMenu: return ["finder menu", "context menu", "right click menu", "finder actions"]
         case .finderRename: return ["finder shortcuts", "rename shortcut", "renames selected files"]
         case .shelf: return [.exact("Shelf"), .island("shelf"), "drop zone", "docked shelf", "temporary shelf",
             "on the shelf", "shelf files"]

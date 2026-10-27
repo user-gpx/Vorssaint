@@ -77,6 +77,8 @@ struct MenuPanelView: View {
     @AppStorage(DefaultsKey.monitorShowNetwork) private var showNetwork = true
     @AppStorage(DefaultsKey.monitorShowDisk) private var showDisk = true
     @AppStorage(DefaultsKey.monitorShowPower) private var showPower = true
+    @AppStorage(DefaultsKey.panelShowMonitorDashboard) private var showMonitorDashboard = true
+    @AppStorage(DefaultsKey.usesUnifiedDashboard) private var usesUnifiedDashboard = true
     @AppStorage(DefaultsKey.panelShowFanControl) private var showFanControl = true
     @AppStorage(DefaultsKey.panelShowKeepAwake) private var showKeepAwake = true
     @AppStorage(DefaultsKey.panelShowBrightness) private var showBrightness = true
@@ -150,6 +152,7 @@ struct MenuPanelView: View {
             return selectedMetric.monitorNeeds
         }
         switch activeSection {
+        case .monitorDashboard: return .dashboard
         case .system: return SystemMonitorPanelNeeds(system: true)
         case .network: return SystemMonitorPanelNeeds(network: true)
         case .disk: return SystemMonitorPanelNeeds(disk: true)
@@ -295,6 +298,7 @@ struct MenuPanelView: View {
         case .keepAwake: return 250
         case .brightness: return 140
         case .mixer: return 250
+        case .monitorDashboard: return 560
         case .system: return 460
         case .network: return 190
         case .disk: return 360
@@ -327,6 +331,14 @@ struct MenuPanelView: View {
         case .keepAwake: KeepAwakeCard(collapsible: collapsible)
         case .brightness: if showBrightness { BrightnessSection(collapsible: collapsible) }
         case .mixer: if showMixer { mixerOrPrioritySection(collapsible: collapsible) }
+        case .monitorDashboard:
+            if showMonitorDashboard {
+                UnifiedMonitorDashboardSection(collapsible: collapsible) { metric in
+                    focusedSection = nil
+                    selectedSection = .monitorDashboard
+                    selectedMetric = metric
+                }
+            }
         case .system:
             if showSystem {
                 SystemSection(collapsible: collapsible) {
@@ -363,8 +375,9 @@ struct MenuPanelView: View {
     /// The rule lives in PanelLayout; reading the @AppStorage values here is
     /// what keeps the tabs refreshing when Settings flips one of them.
     private func isSectionVisible(_ id: PanelSectionID) -> Bool {
-        _ = (showKeepAwake, showBrightness, brightnessEnabled, showMixer, showSystem, showNetwork,
-             showDisk, showPower, showFanControl, showUtilities, showControls, showToggles, showWallpaper)
+        _ = (showKeepAwake, showBrightness, brightnessEnabled, showMixer, showMonitorDashboard,
+             usesUnifiedDashboard, showSystem, showNetwork, showDisk, showPower, showFanControl,
+             showUtilities, showControls, showToggles, showWallpaper)
         return PanelLayout.isVisibleInPanel(id)
     }
 
@@ -412,11 +425,19 @@ struct MenuPanelView: View {
         return colorScheme == .light ? Color.accentColor.opacity(0.13) : Color.accentColor.opacity(0.20)
     }
 
+    private func backSection(for kind: MetricDetailKind) -> PanelSectionID {
+        if PanelLayout.usesUnifiedDashboard,
+           [.system, .network, .disk, .power].contains(kind.panelSection) {
+            return .monitorDashboard
+        }
+        return kind.panelSection
+    }
+
     private func metricNavigationHeader(_ kind: MetricDetailKind) -> some View {
         HStack(spacing: 8) {
             Button {
                 selectedMetric = nil
-                selectedSection = kind.panelSection
+                selectedSection = backSection(for: kind)
                 MenuPanelFocus.shared.clearMetricFocus()
             } label: {
                 Image(systemName: "chevron.left")

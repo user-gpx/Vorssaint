@@ -16,6 +16,7 @@ mkdir -p "$install_test_dir/Applications" "$install_test_dir/stage"
 print new > "$install_test_dir/stage/content"
 INSTALL=1
 STAGE="$install_test_dir/stage"
+FINDER_MENU_EXTENSION=VorssaintFinderMenu
 stopped=()
 signed=()
 stop_process() { stopped+=("$1"); }

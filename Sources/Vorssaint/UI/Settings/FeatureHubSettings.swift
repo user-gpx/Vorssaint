@@ -1163,6 +1163,7 @@ extension AppFeature {
         case .clipboardHistory: return FeatureStrings.clipboard(L10n.shared.language).title
         case .pastePlain: return s.pastePlainName
         case .finderCutPaste: return s.cutPasteName
+        case .finderContextMenu: return "Finder Menu"
         case .finderRename: return FeatureStrings.finderRename(L10n.shared.language).hubTitle
         case .shelf: return s.shelfName
         case .urlCleaner: return s.urlCleanerName
@@ -1247,6 +1248,7 @@ extension AppFeature {
         case .clipboardHistory: return hub.descClipboardHistory
         case .pastePlain: return hub.descPastePlain
         case .finderCutPaste: return hub.descFinderCutPaste
+        case .finderContextMenu: return "Adds Vorssaint actions to Finder’s context menu."
         case .finderRename: return FeatureStrings.finderRename(L10n.shared.language).hubDescription
         case .shelf: return hub.descShelf
         case .urlCleaner: return hub.descURLCleaner

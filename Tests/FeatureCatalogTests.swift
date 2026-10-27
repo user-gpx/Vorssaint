@@ -386,14 +386,14 @@ enum FeatureCatalogTests {
 
         // MARK: Features hub catalog
 
-        suite.expect(AppFeature.allCases.count == 77, "feature catalog has 77 features")
+        suite.expect(AppFeature.allCases.count == 78, "feature catalog has 78 features")
         suite.expect(Set(AppFeature.allCases.map(\.rawValue)).count == AppFeature.allCases.count,
                "feature ids are unique")
         suite.expect(AppFeature.allCases.map(\.rawValue) == [
             "switcher", "dockPreview", "dockClick", "windowMaximizer", "windowLayout", "autoQuit", "spacesOrder",
             "scrollInverter", "scrollHorizontal", "focusFollowsMouse", "smoothScroll", "linearScroll", "mouseAcceleration", "mouseNavigation", "mouseButtonShortcuts", "middleClick",
             "mouseClickDebounce", "keyboardDebounce", "textSnippets", "superKey", "quitWindowProtection",
-            "clipboardHistory", "pastePlain", "finderCutPaste", "finderRename", "shelf", "urlCleaner",
+            "clipboardHistory", "pastePlain", "finderCutPaste", "finderContextMenu", "finderRename", "shelf", "urlCleaner",
             "diskImageInstaller",
             "mixer", "soundOutputSwitcher", "audioPriority", "micMute", "musicBlock",
             "keepAwake", "brightness", "extraBrightness", "bluetoothSleep",
@@ -1660,10 +1660,10 @@ enum FeatureCatalogTests {
         suite.expect(activeSet(.fullDiskAccess) == [.cleaner, .uninstaller],
                "cleaner and uninstaller are on-demand full disk users")
         suite.expect(activeSet(.automationFinder, on: [DefaultsKey.finderCutPasteEnabled])
-                == [.finderCutPaste, .uninstaller, .quickToggles],
-               "finder automation is used by cut and paste, the uninstaller and the quick toggles")
+                == [.finderCutPaste, .finderContextMenu, .uninstaller, .quickToggles],
+               "finder automation is used by cut and paste, the context menu, the uninstaller and the quick toggles")
         suite.expect(activeSet(.automationFinder, on: [DefaultsKey.finderPasteImageAsFile])
-                == [.finderCutPaste, .uninstaller, .quickToggles],
+                == [.finderCutPaste, .finderContextMenu, .uninstaller, .quickToggles],
                "pasting copied images as files engages the shared Finder feature")
         suite.expect(AppFeature.quickToggles.permissions == [.automationFinder],
                "the quick toggles need no permission beyond the Trash's Finder ask")

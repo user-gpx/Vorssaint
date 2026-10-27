@@ -174,6 +174,7 @@ enum DefaultsKey {
     static let finderCutPasteShowHUD = "finderCutPasteShowHUD"
     static let finderRenameEnabled = "finderRenameEnabled"
     static let finderRenameShortcut = "finderRenameShortcut"
+    static let finderMenuConfiguration = "finderMenuConfiguration" // JSON FinderMenuConfiguration
     static let diskImageInstallerTrashesDownload = "diskImageInstallerTrashesDownload"
     static let diskImageInstallerRevealsApp = "diskImageInstallerRevealsApp"
     static let finderPasteImageAsFile = "finderPasteImageAsFile"
@@ -422,6 +423,10 @@ enum DefaultsKey {
     static let monitorShowDisk = "monitorShowDisk"
     static let monitorShowPower = "monitorShowPower"
     static let monitorShowMixer = "monitorShowMixer"
+    static let panelShowMonitorDashboard = "panelShowMonitorDashboard"
+    static let usesUnifiedDashboard = "usesUnifiedDashboard"
+    static let unifiedMonitorCardOrder = "unifiedMonitorCardOrder"
+    static let unifiedMonitorHiddenCards = "unifiedMonitorHiddenCards"
     static let panelShowFanControl = "panelShowFanControl"
     static let fanControlMode = "fanControlMode"
     static let fanControlCoolingLevel = "fanControlCoolingLevel"
@@ -1668,6 +1673,10 @@ enum Defaults {
         DefaultsKey.monitorShowDisk: true,
         DefaultsKey.monitorShowPower: true,
         DefaultsKey.monitorShowMixer: true,
+        DefaultsKey.panelShowMonitorDashboard: true,
+        DefaultsKey.usesUnifiedDashboard: true,
+        DefaultsKey.unifiedMonitorCardOrder: "",
+        DefaultsKey.unifiedMonitorHiddenCards: "",
         DefaultsKey.panelShowFanControl: true,
         DefaultsKey.fanControlMode: FanControlMode.system.rawValue,
         DefaultsKey.fanControlCoolingLevel: FanControlPolicy.defaultCoolingLevel,

@@ -130,6 +130,8 @@ struct MetricsTests {
                 FeatureCatalogTests.run(suite)
                 MenuPanelSectionGateContract.run(suite)
             }),
+            ("finder-menu", { FinderMenuContractTests.run(suite) }),
+            ("monitor-dashboard", { UnifiedMonitorAdapterTests.run(suite) }),
             ("utilities", {
                 UtilitiesFeatureTests.run(suite)
                 TextSnippetExpansionTests.run(suite)

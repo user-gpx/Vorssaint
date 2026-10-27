@@ -124,6 +124,14 @@ struct SystemMonitorPanelNeeds: Equatable {
 
     static let none = SystemMonitorPanelNeeds()
 
+    /// The unified overview shows every family at once.
+    static let dashboard = SystemMonitorPanelNeeds(
+        system: true, network: true, disk: true, power: true, powerCard: true,
+        cpu: true, gpu: true, memory: true, battery: true, peripheralBattery: true,
+        cpuTemperature: true, gpuTemperature: true, batteryTemperature: true,
+        fanSpeed: true, connectedDevices: true
+    )
+
     var any: Bool {
         system || network || disk || power || powerCard || cpu || gpu || memory || battery ||
             peripheralBattery || cpuTemperature || gpuTemperature || batteryTemperature || fanSpeed ||

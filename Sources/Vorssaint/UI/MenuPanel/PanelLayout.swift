@@ -10,8 +10,8 @@ protocol PanelOrderItem: RawRepresentable, CaseIterable, Hashable where RawValue
 /// stable identifiers persisted in the saved order and the collapsed set, so
 /// renaming a case would orphan a user's stored layout — keep them stable.
 enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
-    case keepAwake, brightness, mixer, system, network, disk, power, fanControl, utilities, controls,
-         toggles, wallpaper
+    case keepAwake, brightness, mixer, monitorDashboard, system, network, disk, power, fanControl,
+         utilities, controls, toggles, wallpaper
 
     var id: String { rawValue }
 
@@ -21,6 +21,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .keepAwake: return s.keepAwakeTitle
         case .brightness: return FeatureStrings.brightness(L10n.shared.language).pageTitle
         case .mixer: return s.mixerSection
+        case .monitorDashboard: return s.tabMonitor
         case .system: return s.systemSection
         case .network: return s.networkSection
         case .disk: return s.diskSection
@@ -38,6 +39,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .keepAwake: return "moon.zzz.fill"
         case .brightness: return "display.2"
         case .mixer: return "speaker.wave.2"
+        case .monitorDashboard: return "square.grid.2x2"
         case .system: return "cpu"
         case .network: return "network"
         case .disk: return "internaldrive"
@@ -58,6 +60,7 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .keepAwake: return DefaultsKey.panelShowKeepAwake
         case .brightness: return DefaultsKey.panelShowBrightness
         case .mixer: return DefaultsKey.monitorShowMixer
+        case .monitorDashboard: return DefaultsKey.panelShowMonitorDashboard
         case .system: return DefaultsKey.monitorShowSystem
         case .network: return DefaultsKey.monitorShowNetwork
         case .disk: return DefaultsKey.monitorShowDisk
@@ -82,6 +85,8 @@ enum PanelSectionID: String, CaseIterable, Identifiable, Hashable {
         case .keepAwake: return [.keepAwake]
         case .brightness: return [.brightness]
         case .mixer: return [.mixer, .audioPriority]
+        case .monitorDashboard:
+            return [.monitorCPU, .monitorGPU, .monitorMemory, .monitorNetwork, .monitorDisk, .monitorPower]
         case .system: return [.monitorCPU, .monitorGPU, .monitorMemory, .connectedDevices]
         case .network: return [.monitorNetwork]
         case .disk: return [.monitorDisk]
@@ -122,7 +127,9 @@ enum PanelLayout {
         var result: [PanelSectionID] = []
         for id in saved where seen.insert(id).inserted { result.append(id) }
         for id in PanelSectionID.allCases where seen.insert(id).inserted {
-            if id == .disk, let networkIndex = result.firstIndex(of: .network) {
+            if id == .monitorDashboard, let systemIndex = result.firstIndex(of: .system) {
+                result.insert(id, at: systemIndex)
+            } else if id == .disk, let networkIndex = result.firstIndex(of: .network) {
                 result.insert(id, at: networkIndex + 1)
             } else if id == .controls, let utilitiesIndex = result.firstIndex(of: .utilities) {
                 result.insert(id, at: utilitiesIndex + 1)
@@ -169,7 +176,20 @@ enum PanelLayout {
     /// live panel and its preview in Settings both read.
     static func isVisibleInPanel(_ id: PanelSectionID) -> Bool {
         guard id.isAvailable, isShown(id) else { return false }
+        if id == .monitorDashboard {
+            return usesUnifiedDashboard
+        }
+        if usesUnifiedDashboard,
+           [.system, .network, .disk, .power].contains(id) {
+            return false
+        }
         return id != .brightness || defaults.bool(forKey: DefaultsKey.brightnessControlEnabled)
+    }
+
+    /// The overview replaces the four separate monitoring tabs. Users who
+    /// prefer the older layout can switch back without losing its settings.
+    static var usesUnifiedDashboard: Bool {
+        defaults.object(forKey: DefaultsKey.usesUnifiedDashboard) as? Bool ?? true
     }
 
     static func isCollapsed(_ id: PanelSectionID) -> Bool {

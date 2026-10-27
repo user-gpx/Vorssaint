@@ -123,6 +123,7 @@ private extension PanelSectionID {
         case .keepAwake: return text.sectionKeepAwake
         case .brightness: return text.sectionDisplays
         case .mixer: return text.sectionMixer
+        case .monitorDashboard: return text.sectionSystem
         case .system: return text.sectionSystem
         case .network: return text.sectionNetwork
         case .disk: return text.sectionDisks
