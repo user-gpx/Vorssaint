@@ -24,11 +24,12 @@ enum FinderMenuAction: String, Codable, CaseIterable, Sendable {
     case restartFinder
     case openWithApp
 
-    /// The menu deliberately stays small. The other identities remain in the
-    /// enum so saved configurations and older requests still decode, but they
-    /// are filtered out before the menu is published.
+    /// Every built-in row Vorssaint can publish. The order follows Qind's
+    /// Finder menu; users can drag rows in Settings to override it.
     static let defaultOrder: [FinderMenuAction] = [
-        .newTerminal, .copy, .cut, .paste, .newFile
+        .compress, .extract, .newTerminal, .copyPath, .newFile,
+        .copy, .cut, .paste, .delete, .networkInfo,
+        .uninstallApp, .restartFinder, .emptyTrash, .hiddenFiles
     ]
 
     static let menuActions = Set(defaultOrder)

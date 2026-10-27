@@ -234,14 +234,16 @@ final class FinderMenuService {
             try run("/usr/bin/killall", ["Finder"])
             return nil
         case .uninstallApp:
-            guard let path = request.appPath else {
+            guard let appURL = selected.first else {
+                throw FinderMenuRequestError.emptySelection
+            }
+            guard appURL.pathExtension.lowercased() == "app" else {
                 throw FinderMenuRequestError.invalidApplicationPath
             }
             guard AppFeature.uninstaller.isAvailable else {
                 AppFeature.uninstaller.showInFeatures()
                 throw FinderMenuOperationError.featureUnavailable("Uninstaller")
             }
-            let appURL = URL(fileURLWithPath: path)
             try onMainSync {
                 guard AppUninstaller.shared.select(appURL: appURL) else {
                     throw FinderMenuOperationError.uninstallRefused
@@ -299,9 +301,14 @@ final class FinderMenuService {
                                             : "Archive",
                                          extension: "zip")
         if urls.count == 1 {
-            let result = try runProcess("/usr/bin/ditto",
-                                        ["-c", "-k", "--sequesterRsrc", "--keepParent",
-                                         urls[0].path, destination.path])
+            var isDirectory: ObjCBool = false
+            fileManager.fileExists(atPath: urls[0].path, isDirectory: &isDirectory)
+            var arguments = ["-c", "-k", "--sequesterRsrc"]
+            if isDirectory.boolValue {
+                arguments.append("--keepParent")
+            }
+            arguments.append(contentsOf: [urls[0].path, destination.path])
+            let result = try runProcess("/usr/bin/ditto", arguments)
             guard result.status == 0 else {
                 throw FinderMenuOperationError.operationFailed(result.errorText)
             }

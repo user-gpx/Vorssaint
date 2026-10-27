@@ -24,7 +24,7 @@ final class FinderMenuConfigurationStore {
         else {
             return .default
         }
-        return decoded.normalized()
+        return decoded.normalized().includingMissingDefaultActions()
     }
 
     func save(_ configuration: FinderMenuConfiguration) throws {

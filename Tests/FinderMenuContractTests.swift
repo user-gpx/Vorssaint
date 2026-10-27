@@ -18,11 +18,19 @@ enum FinderMenuContractTests {
     private static func testDefaults(_ suite: TestSuite) {
         let actionIDs = FinderMenuAction.allCases.map(\.rawValue)
         suite.expect(Set(actionIDs).count == actionIDs.count, "action identities are unique")
-        suite.expect(FinderMenuAction.defaultOrder.count == 5, "the default menu has five built-in rows")
-        suite.expect(Set(FinderMenuAction.defaultOrder).count == 5,
+        let expectedOrder: [FinderMenuAction] = [
+            .compress, .extract, .newTerminal, .copyPath, .newFile,
+            .copy, .cut, .paste, .delete, .networkInfo,
+            .uninstallApp, .restartFinder, .emptyTrash, .hiddenFiles
+        ]
+        suite.expect(FinderMenuAction.defaultOrder == expectedOrder,
+                     "the default menu matches Qind's action order")
+        suite.expect(Set(FinderMenuAction.defaultOrder).count == expectedOrder.count,
                      "the default menu does not repeat an action")
         suite.expect(FinderMenuAction.menuActions == Set(FinderMenuAction.defaultOrder),
                      "the supported menu set matches the default order")
+        suite.expect(!FinderMenuAction.menuActions.contains(.openWithApp),
+                     "Open With is only published through application rows")
 
         let config = FinderMenuConfiguration.default.normalized()
         suite.expect(config.schemaVersion == FinderMenuConfiguration.currentSchemaVersion,
@@ -41,6 +49,16 @@ enum FinderMenuContractTests {
         suite.expect(!FinderMenuAction.copy.isDestructive, "copy is not destructive")
         suite.expect(FinderMenuAction.allCases.allSatisfy { !$0.defaultSymbolName.isEmpty },
                      "every built-in action has a fallback symbol")
+
+        for language in AppLanguage.allCases {
+            let strings = FeatureStrings.finderMenu(language)
+            for action in FinderMenuAction.defaultOrder {
+                suite.expect(!strings.title(for: action).isEmpty,
+                             "\(language.rawValue) localizes \(action.rawValue)")
+            }
+            suite.expect(!strings.reorderHint.isEmpty,
+                         "\(language.rawValue) explains drag reordering")
+        }
     }
 
     private static func testNormalization(_ suite: TestSuite) {
@@ -60,10 +78,31 @@ enum FinderMenuContractTests {
                      "custom symbols are trimmed")
 
         let unsupported = FinderMenuConfiguration(
-            items: [.action(.compress), .action(.delete), .action(.copy)]
+            items: [.action(.openWithApp), .action(.copy)]
         ).normalized()
         suite.expect(unsupported.items.map(\.id) == ["copy"],
-                     "actions removed from the menu are dropped from older configurations")
+                     "a bare Open With row is dropped; application rows carry it instead")
+
+        let legacy = FinderMenuConfiguration(
+            items: [.action(.newTerminal), .action(.copy), .action(.cut),
+                    .action(.paste), .action(.newFile)]
+        )
+        let migrated = legacy.includingMissingDefaultActions()
+        suite.expect(migrated.items.prefix(5).map(\.id) == ["newTerminal", "copy", "cut", "paste", "newFile"],
+                     "migration keeps the five existing rows in place")
+        suite.expect(migrated.items.count == FinderMenuAction.defaultOrder.count,
+                     "migration appends every newly supported action once")
+        suite.expect(Set(migrated.items.compactMap(\.action)) == FinderMenuAction.menuActions,
+                     "migration restores the complete built-in menu")
+
+        var reordered = FinderMenuConfiguration.default
+        suite.expect(reordered.moveAction(.compress, to: .newFile),
+                     "a dragged action moves to the target row")
+        suite.expect(reordered.normalized().orderedRows().map(\.id).prefix(5)
+                         == ["extract", "newTerminal", "copyPath", "newFile", "compress"],
+                     "row order is preserved for the extension snapshot")
+        suite.expect(!reordered.moveAction(.compress, to: .compress),
+                     "dropping an action onto itself is a no-op")
 
         let applications = FinderMenuConfiguration(
             items: [
@@ -224,6 +263,10 @@ enum FinderMenuContractTests {
                                       createdAt: now),
                     .unexpectedApplicationPath, "only Open With may carry an application path")
 
+        expectValid(FinderMenuRequest(action: .uninstallApp,
+                                      selectedPaths: ["/Applications/A.app"],
+                                      createdAt: now),
+                    "Uninstall App accepts one selected application")
         expectError(FinderMenuRequest(action: .uninstallApp,
                                       selectedPaths: ["/Applications/A.app", "/Applications/B.app"],
                                       createdAt: now),
@@ -297,8 +340,21 @@ enum FinderMenuContractTests {
         configuration.showIcons = false
         configuration.items = [.action(.copy, customTitle: "Copy"), .action(.delete)]
         try! store.save(configuration)
-        suite.expect(store.load() == configuration.normalized(),
-                     "saved configurations round trip through defaults")
+        let expected = configuration.normalized().includingMissingDefaultActions()
+        suite.expect(store.load() == expected,
+                     "saved configurations round trip and gain new default actions")
+
+        let legacy = FinderMenuConfiguration(items: [
+            .action(.newTerminal), .action(.copy), .action(.cut),
+            .action(.paste), .action(.newFile)
+        ])
+        try! store.save(legacy)
+        let migrated = store.load()
+        suite.expect(migrated.items.prefix(5).map(\.id)
+                         == ["newTerminal", "copy", "cut", "paste", "newFile"],
+                     "a five-row configuration is migrated without reordering it")
+        suite.expect(migrated.items.count == FinderMenuAction.defaultOrder.count,
+                     "loading an old configuration restores every action")
 
         defaults.set(Data("not json".utf8), forKey: key)
         suite.expect(store.load() == .default, "corrupt data falls back to the default menu")

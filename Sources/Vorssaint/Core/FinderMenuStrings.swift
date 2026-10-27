@@ -14,6 +14,16 @@ struct FinderMenuStrings {
     let paste: String
     let newTerminal: String
     let newFile: String
+    let compress: String
+    let extract: String
+    let copyPath: String
+    let hiddenFiles: String
+    let delete: String
+    let emptyTrash: String
+    let networkInfo: String
+    let uninstallApp: String
+    let restartFinder: String
+    let reorderHint: String
 
     func title(for action: FinderMenuAction) -> String {
         switch action {
@@ -22,7 +32,16 @@ struct FinderMenuStrings {
         case .paste: return paste
         case .newTerminal: return newTerminal
         case .newFile: return newFile
-        default: return action.defaultTitle
+        case .compress: return compress
+        case .extract: return extract
+        case .copyPath: return copyPath
+        case .hiddenFiles: return hiddenFiles
+        case .delete: return delete
+        case .emptyTrash: return emptyTrash
+        case .networkInfo: return networkInfo
+        case .uninstallApp: return uninstallApp
+        case .restartFinder: return restartFinder
+        case .openWithApp: return action.defaultTitle
         }
     }
 }
@@ -60,7 +79,17 @@ extension FinderMenuStrings {
         cut: "Cut",
         paste: "Paste",
         newTerminal: "New Terminal",
-        newFile: "New File"
+        newFile: "New File",
+        compress: "Compress",
+        extract: "Extract",
+        copyPath: "Copy Path",
+        hiddenFiles: "Show Hidden Files",
+        delete: "Move to Trash",
+        emptyTrash: "Empty Trash",
+        networkInfo: "Network Info",
+        uninstallApp: "Uninstall App",
+        restartFinder: "Restart Finder",
+        reorderHint: "Drag the handle to change the order of Finder menu items."
     )
 
     static let ptBR = FinderMenuStrings(
@@ -73,7 +102,17 @@ extension FinderMenuStrings {
         cut: "Recortar",
         paste: "Colar",
         newTerminal: "Novo Terminal",
-        newFile: "Novo Arquivo"
+        newFile: "Novo Arquivo",
+        compress: "Comprimir",
+        extract: "Extrair",
+        copyPath: "Copiar Caminho",
+        hiddenFiles: "Mostrar Arquivos Ocultos",
+        delete: "Mover para o Lixo",
+        emptyTrash: "Esvaziar o Lixo",
+        networkInfo: "Informações de Rede",
+        uninstallApp: "Desinstalar App",
+        restartFinder: "Reiniciar o Finder",
+        reorderHint: "Arraste a alça para alterar a ordem dos itens do menu do Finder."
     )
 
     static let tr = FinderMenuStrings(
@@ -86,7 +125,17 @@ extension FinderMenuStrings {
         cut: "Kes",
         paste: "Yapıştır",
         newTerminal: "Yeni Terminal",
-        newFile: "Yeni Dosya"
+        newFile: "Yeni Dosya",
+        compress: "Sıkıştır",
+        extract: "Çıkar",
+        copyPath: "Yolu Kopyala",
+        hiddenFiles: "Gizli Dosyaları Göster",
+        delete: "Çöp Sepetine Taşı",
+        emptyTrash: "Çöp Sepetini Boşalt",
+        networkInfo: "Ağ Bilgileri",
+        uninstallApp: "Uygulamayı Kaldır",
+        restartFinder: "Finder’ı Yeniden Başlat",
+        reorderHint: "Finder menü öğelerinin sırasını değiştirmek için tutamacı sürükleyin."
     )
 
     static let ru = FinderMenuStrings(
@@ -99,7 +148,17 @@ extension FinderMenuStrings {
         cut: "Вырезать",
         paste: "Вставить",
         newTerminal: "Новый терминал",
-        newFile: "Новый файл"
+        newFile: "Новый файл",
+        compress: "Сжать",
+        extract: "Распаковать",
+        copyPath: "Скопировать путь",
+        hiddenFiles: "Показать скрытые файлы",
+        delete: "Переместить в Корзину",
+        emptyTrash: "Очистить Корзину",
+        networkInfo: "Сведения о сети",
+        uninstallApp: "Удалить приложение",
+        restartFinder: "Перезапустить Finder",
+        reorderHint: "Перетащите маркер, чтобы изменить порядок пунктов меню Finder."
     )
 
     static let es = FinderMenuStrings(
@@ -112,7 +171,17 @@ extension FinderMenuStrings {
         cut: "Cortar",
         paste: "Pegar",
         newTerminal: "Nueva terminal",
-        newFile: "Nuevo archivo"
+        newFile: "Nuevo archivo",
+        compress: "Comprimir",
+        extract: "Extraer",
+        copyPath: "Copiar ruta",
+        hiddenFiles: "Mostrar archivos ocultos",
+        delete: "Mover a la papelera",
+        emptyTrash: "Vaciar papelera",
+        networkInfo: "Información de red",
+        uninstallApp: "Desinstalar app",
+        restartFinder: "Reiniciar Finder",
+        reorderHint: "Arrastra el tirador para cambiar el orden de los elementos del menú del Finder."
     )
 
     static let sk = FinderMenuStrings(
@@ -125,7 +194,17 @@ extension FinderMenuStrings {
         cut: "Vystrihnúť",
         paste: "Vložiť",
         newTerminal: "Nový terminál",
-        newFile: "Nový súbor"
+        newFile: "Nový súbor",
+        compress: "Komprimovať",
+        extract: "Extrahovať",
+        copyPath: "Kopírovať cestu",
+        hiddenFiles: "Zobraziť skryté súbory",
+        delete: "Presunúť do koša",
+        emptyTrash: "Vyprázdniť kôš",
+        networkInfo: "Informácie o sieti",
+        uninstallApp: "Odinštalovať aplikáciu",
+        restartFinder: "Reštartovať Finder",
+        reorderHint: "Potiahnutím rukoväte zmeníte poradie položiek ponuky Finderu."
     )
 
     static let de = FinderMenuStrings(
@@ -138,7 +217,17 @@ extension FinderMenuStrings {
         cut: "Ausschneiden",
         paste: "Einsetzen",
         newTerminal: "Neues Terminal",
-        newFile: "Neue Datei"
+        newFile: "Neue Datei",
+        compress: "Komprimieren",
+        extract: "Entpacken",
+        copyPath: "Pfad kopieren",
+        hiddenFiles: "Versteckte Dateien anzeigen",
+        delete: "In den Papierkorb legen",
+        emptyTrash: "Papierkorb leeren",
+        networkInfo: "Netzwerkinformationen",
+        uninstallApp: "App deinstallieren",
+        restartFinder: "Finder neu starten",
+        reorderHint: "Ziehe den Griff, um die Reihenfolge der Finder-Menüeinträge zu ändern."
     )
 
     static let fr = FinderMenuStrings(
@@ -151,7 +240,17 @@ extension FinderMenuStrings {
         cut: "Couper",
         paste: "Coller",
         newTerminal: "Nouveau Terminal",
-        newFile: "Nouveau fichier"
+        newFile: "Nouveau fichier",
+        compress: "Compresser",
+        extract: "Extraire",
+        copyPath: "Copier le chemin",
+        hiddenFiles: "Afficher les fichiers masqués",
+        delete: "Placer dans la corbeille",
+        emptyTrash: "Vider la corbeille",
+        networkInfo: "Informations réseau",
+        uninstallApp: "Désinstaller l’app",
+        restartFinder: "Relancer le Finder",
+        reorderHint: "Faites glisser la poignée pour modifier l’ordre des éléments du menu du Finder."
     )
 
     static let it = FinderMenuStrings(
@@ -164,7 +263,17 @@ extension FinderMenuStrings {
         cut: "Taglia",
         paste: "Incolla",
         newTerminal: "Nuovo Terminale",
-        newFile: "Nuovo file"
+        newFile: "Nuovo file",
+        compress: "Comprimi",
+        extract: "Estrai",
+        copyPath: "Copia percorso",
+        hiddenFiles: "Mostra file nascosti",
+        delete: "Sposta nel Cestino",
+        emptyTrash: "Svuota il Cestino",
+        networkInfo: "Informazioni di rete",
+        uninstallApp: "Disinstalla app",
+        restartFinder: "Riavvia il Finder",
+        reorderHint: "Trascina la maniglia per cambiare l’ordine delle voci del menu del Finder."
     )
 
     static let ja = FinderMenuStrings(
@@ -177,7 +286,17 @@ extension FinderMenuStrings {
         cut: "カット",
         paste: "ペースト",
         newTerminal: "新規ターミナル",
-        newFile: "新規ファイル"
+        newFile: "新規ファイル",
+        compress: "圧縮",
+        extract: "解凍",
+        copyPath: "パスをコピー",
+        hiddenFiles: "隠しファイルを表示",
+        delete: "ゴミ箱に入れる",
+        emptyTrash: "ゴミ箱を空にする",
+        networkInfo: "ネットワーク情報",
+        uninstallApp: "アプリをアンインストール",
+        restartFinder: "Finderを再起動",
+        reorderHint: "ハンドルをドラッグしてFinderメニューの項目順を変更します。"
     )
 
     static let ko = FinderMenuStrings(
@@ -190,7 +309,17 @@ extension FinderMenuStrings {
         cut: "잘라내기",
         paste: "붙여넣기",
         newTerminal: "새 터미널",
-        newFile: "새 파일"
+        newFile: "새 파일",
+        compress: "압축",
+        extract: "압축 풀기",
+        copyPath: "경로 복사",
+        hiddenFiles: "숨김 파일 표시",
+        delete: "휴지통으로 이동",
+        emptyTrash: "휴지통 비우기",
+        networkInfo: "네트워크 정보",
+        uninstallApp: "앱 제거",
+        restartFinder: "Finder 재시작",
+        reorderHint: "핸들을 드래그하여 Finder 메뉴 항목 순서를 변경하십시오."
     )
 
     static let zhHans = FinderMenuStrings(
@@ -203,7 +332,17 @@ extension FinderMenuStrings {
         cut: "剪切",
         paste: "粘贴",
         newTerminal: "新建终端",
-        newFile: "新建文件"
+        newFile: "新建文件",
+        compress: "压缩文件",
+        extract: "解压文件",
+        copyPath: "拷贝路径",
+        hiddenFiles: "显示隐藏文件",
+        delete: "移到废纸篓",
+        emptyTrash: "清倒废纸篓",
+        networkInfo: "网络信息",
+        uninstallApp: "卸载应用",
+        restartFinder: "重启访达",
+        reorderHint: "拖动左侧手柄可调整访达右键菜单的顺序。"
     )
 
     static let zhTW = FinderMenuStrings(
@@ -216,7 +355,17 @@ extension FinderMenuStrings {
         cut: "剪下",
         paste: "貼上",
         newTerminal: "新增終端機",
-        newFile: "新增檔案"
+        newFile: "新增檔案",
+        compress: "壓縮檔案",
+        extract: "解壓縮檔案",
+        copyPath: "拷貝路徑",
+        hiddenFiles: "顯示隱藏檔案",
+        delete: "移到垃圾桶",
+        emptyTrash: "清空垃圾桶",
+        networkInfo: "網路資訊",
+        uninstallApp: "解除安裝 App",
+        restartFinder: "重新啟動 Finder",
+        reorderHint: "拖曳左側控點可調整 Finder 右鍵選單的順序。"
     )
 
     static let zhHK = FinderMenuStrings(
@@ -229,7 +378,17 @@ extension FinderMenuStrings {
         cut: "剪下",
         paste: "貼上",
         newTerminal: "新增終端機",
-        newFile: "新增檔案"
+        newFile: "新增檔案",
+        compress: "壓縮檔案",
+        extract: "解壓縮檔案",
+        copyPath: "複製路徑",
+        hiddenFiles: "顯示隱藏檔案",
+        delete: "移到垃圾桶",
+        emptyTrash: "清空垃圾桶",
+        networkInfo: "網絡資訊",
+        uninstallApp: "解除安裝 App",
+        restartFinder: "重新啟動 Finder",
+        reorderHint: "拖曳左側控點可調整 Finder 右鍵選單的順序。"
     )
 
     static let uk = FinderMenuStrings(
@@ -242,6 +401,16 @@ extension FinderMenuStrings {
         cut: "Вирізати",
         paste: "Вставити",
         newTerminal: "Новий термінал",
-        newFile: "Новий файл"
+        newFile: "Новий файл",
+        compress: "Стиснути",
+        extract: "Розпакувати",
+        copyPath: "Скопіювати шлях",
+        hiddenFiles: "Показати приховані файли",
+        delete: "Перемістити до Кошика",
+        emptyTrash: "Очистити Кошик",
+        networkInfo: "Інформація про мережу",
+        uninstallApp: "Видалити програму",
+        restartFinder: "Перезапустити Finder",
+        reorderHint: "Перетягніть маркер, щоб змінити порядок пунктів меню Finder."
     )
 }

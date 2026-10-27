@@ -197,6 +197,33 @@ struct FinderMenuConfiguration: Codable, Equatable, Sendable {
                                        groups: validGroups)
     }
 
+    /// Moves one built-in row onto another row's position. The drag uses the
+    /// same insertion rule as the settings list, so the persisted order and
+    /// the extension snapshot cannot drift apart.
+    mutating func moveAction(_ source: FinderMenuAction, to target: FinderMenuAction) -> Bool {
+        guard source != target,
+              let from = items.firstIndex(where: { $0.action == source }),
+              let to = items.firstIndex(where: { $0.action == target })
+        else { return false }
+        let item = items.remove(at: from)
+        items.insert(item, at: to)
+        return true
+    }
+
+    /// Appends built-in actions added after this configuration was saved.
+    /// Existing rows keep their position and enabled state; new rows are
+    /// appended in the current stock order so old menus never lose a function.
+    func includingMissingDefaultActions() -> FinderMenuConfiguration {
+        var configuration = normalized()
+        let present = Set(configuration.items.compactMap { item -> FinderMenuAction? in
+            item.kind == .action ? item.action : nil
+        })
+        for action in FinderMenuAction.defaultOrder where !present.contains(action) {
+            configuration.items.append(.action(action))
+        }
+        return configuration.normalized()
+    }
+
     /// Every row in display order: ungrouped rows first, then enabled groups.
     /// The extension uses this to turn the persisted configuration into
     /// `NSMenu` items without re-implementing the ordering rules.

@@ -9,10 +9,7 @@ import Foundation
 /// the main app validates existence and permissions before acting.
 enum FinderMenuBuilder {
     static let extractExtensions: Set<String> = [
-        "tar", "rar", "rar5", "arj", "cab", "chm", "cpio", "deb", "dmg",
-        "fat", "hfs", "iso", "lzh", "lha", "lzma", "mbr", "msi", "nsis",
-        "ntfs", "rpm", "squashfs", "udf", "uefi", "vdi", "vhd", "vmdk",
-        "xar", "7z", "zip", "gz"
+        "zip", "tar", "gz", "tgz", "bz2", "xz"
     ]
 
     static func isEligible(_ item: FinderMenuSnapshotItem, selected: [URL]) -> Bool {

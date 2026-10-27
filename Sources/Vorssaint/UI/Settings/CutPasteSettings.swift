@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Vorssaint
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct CutPasteSettings: View {
     @ObservedObject private var l10n = L10n.shared
@@ -17,6 +18,7 @@ struct CutPasteSettings: View {
     @State private var pendingRenameTakeOver: GlobalShortcut?
     @State private var menuConfiguration = FinderMenuConfigurationStore.shared.load()
     @State private var menuError: String?
+    @State private var draggingMenuAction: FinderMenuAction?
 
     private var renameText: FinderRenameFeatureStrings {
         FeatureStrings.finderRename(l10n.language)
@@ -89,11 +91,26 @@ struct CutPasteSettings: View {
                 }
                 .settingsFormSectionAnchor(.finderContextMenu)
 
-                Section(menuText.itemsLabel) {
-                    ForEach(FinderMenuAction.defaultOrder, id: \.rawValue) { action in
-                        Toggle(menuText.title(for: action), isOn: menuItemBinding(action))
-                            .disabled(!menuConfiguration.isEnabled)
+                Section {
+                    ForEach(menuConfiguration.items) { item in
+                        if item.kind == .action, let action = item.action {
+                            FinderMenuActionRow(
+                                action: action,
+                                title: menuText.title(for: action),
+                                isEnabled: menuItemBinding(action),
+                                isGloballyEnabled: menuConfiguration.isEnabled,
+                                dragging: $draggingMenuAction,
+                                reorderHint: menuText.reorderHint,
+                                onMove: moveMenuAction
+                            )
+                        }
                     }
+                } header: {
+                    Text(menuText.itemsLabel)
+                } footer: {
+                    Text(menuText.reorderHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -206,6 +223,14 @@ struct CutPasteSettings: View {
         )
     }
 
+    private func moveMenuAction(_ source: FinderMenuAction, to target: FinderMenuAction) {
+        let moved = withAnimation(.easeInOut(duration: 0.12)) {
+            menuConfiguration.moveAction(source, to: target)
+        }
+        guard moved else { return }
+        saveMenuConfiguration()
+    }
+
     private func saveMenuConfiguration() {
         do {
             try FinderMenuConfigurationStore.shared.save(menuConfiguration)
@@ -252,5 +277,70 @@ struct CutPasteSettings: View {
             if clearTakeOver { SystemShortcutTakeover.setTakeOver(DefaultsKey.finderRenameShortcut, false) }
         }
         FinderRenameService.shared.syncWithPreferences()
+    }
+}
+
+private struct FinderMenuActionRow: View {
+    let action: FinderMenuAction
+    let title: String
+    @Binding var isEnabled: Bool
+    let isGloballyEnabled: Bool
+    @Binding var dragging: FinderMenuAction?
+    let reorderHint: String
+    let onMove: (FinderMenuAction, FinderMenuAction) -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "line.3.horizontal")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.tertiary)
+                .frame(width: 16, height: 22)
+                .contentShape(Rectangle())
+                .help(reorderHint)
+                .onDrag {
+                    dragging = action
+                    return NSItemProvider(object: action.rawValue as NSString)
+                }
+            Image(systemName: action.defaultSymbolName)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 24, height: 24)
+                .background(Color.secondary.opacity(0.10),
+                            in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            Text(title)
+                .font(.callout)
+            Spacer(minLength: 0)
+            Toggle(title, isOn: $isEnabled)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .disabled(!isGloballyEnabled)
+        }
+        .padding(.vertical, 2)
+        .opacity(dragging == action ? 0.45 : 1)
+        .onDrop(of: [UTType.text],
+                delegate: FinderMenuActionDropDelegate(target: action,
+                                                       dragging: $dragging,
+                                                       onMove: onMove))
+    }
+}
+
+private struct FinderMenuActionDropDelegate: DropDelegate {
+    let target: FinderMenuAction
+    @Binding var dragging: FinderMenuAction?
+    let onMove: (FinderMenuAction, FinderMenuAction) -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let dragging, dragging != target else { return }
+        onMove(dragging, target)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        dragging = nil
+        return true
     }
 }
